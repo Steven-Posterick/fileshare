@@ -1,6 +1,8 @@
 package dev.stevenposterick.fileshare.api.controller;
 
-import dev.stevenposterick.fileshare.api.service.SharedFileService;
+import dev.stevenposterick.fileshare.api.data.ExpirationDate;
+import dev.stevenposterick.fileshare.api.service.FileShareService;
+import dev.stevenposterick.fileshare.api.service.NumberService;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,21 +11,38 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/files")
 public class FileShareController {
 
-    private final SharedFileService fileService;
+    private final FileShareService fileService;
+    private final NumberService numberService;
 
-    public FileShareController(SharedFileService fileService) {
+    public FileShareController(
+            FileShareService fileService,
+            NumberService numberService
+    ) {
         this.fileService = fileService;
+        this.numberService = numberService;
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file){
+    public ResponseEntity<String> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(name = "expiration", defaultValue = "WEEK") String expiration,
+            @RequestParam(name = "burnAfter", defaultValue = "") String burnAfter
+    ){
         try {
-            var fileId = fileService.uploadFile(file);
+            var expirationType = Arrays
+                    .stream(ExpirationDate.values()).filter(x-> x.name().equals(expiration))
+                    .findFirst()
+                    .orElse(ExpirationDate.WEEK);
+
+            var burnAfterInteger = numberService.tryParse(burnAfter);
+
+            var fileId = fileService.uploadFile(file, expirationType, burnAfterInteger);
             return ResponseEntity.ok(fileId);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file: " + e.getMessage());

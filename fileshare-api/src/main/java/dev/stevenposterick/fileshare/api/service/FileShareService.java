@@ -5,6 +5,7 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import dev.stevenposterick.fileshare.api.data.ExpirationDate;
+import dev.stevenposterick.fileshare.api.dto.FileDetailsResponse;
 import dev.stevenposterick.fileshare.api.model.FileDateExpiration;
 import dev.stevenposterick.fileshare.api.model.FileReadExpiration;
 import dev.stevenposterick.fileshare.api.model.FileShared;
@@ -78,8 +79,36 @@ public class FileShareService {
         }
     }
 
-    public Optional<FileShared> getSharedFile(String fileId) {
-        return fileSharedRepository.findById(new ObjectId(fileId));
+    public Optional<FileShared> getSharedFile(ObjectId fileId) {
+        return fileSharedRepository.findById(fileId);
+    }
+
+    public Optional<FileReadExpiration> getFileReadExpirationByFileId(ObjectId fileId){
+        return fileReadExpirationRepository.findByFileId(fileId).stream().findFirst();
+    }
+
+    public Optional<FileDateExpiration> getFileDateExpirationByFileId(ObjectId fileId){
+        return fileDateExpirationRepository.findByFileId(fileId).stream().findFirst();
+    }
+
+    public Optional<FileDetailsResponse> getFileDetails(ObjectId fileId) {
+        try {
+            var sharedFile = getSharedFile(fileId);
+            var fileRead = getFileReadExpirationByFileId(fileId);
+            var fileExpiration = getFileDateExpirationByFileId(fileId);
+
+            if (sharedFile.isEmpty()) return Optional.empty();
+
+            FileDetailsResponse fileDetails = new FileDetailsResponse();
+            fileDetails.setFileName(sharedFile.get().getFileName());
+            fileExpiration.ifPresent(fileDateExpiration -> fileDetails.setExpirationDate(fileDateExpiration.getExpiration()));
+            fileRead.ifPresent(fileReadExpiration -> fileDetails.setRemainingReads(fileReadExpiration.getReadLeft()));
+
+            return Optional.of(fileDetails);
+        } catch (Exception e) {
+            // Depending on your error handling strategy, you might want to log the exception here.
+            return Optional.empty();
+        }
     }
 
     public Resource downloadFile(String fileId) throws IOException {
@@ -100,9 +129,9 @@ public class FileShareService {
         }
 
         // Delete if burn on read.
-        var list = fileReadExpirationRepository.findByFileId(objectId).stream().toList();
-        if (!list.isEmpty()){
-            var expiration = list.stream().findFirst().get();
+        var fileReadExpiration = getFileReadExpirationByFileId(objectId);
+        if (fileReadExpiration.isPresent()){
+            var expiration = fileReadExpiration.get();
 
             expiration.setReadLeft(expiration.getReadLeft() - 1);
 

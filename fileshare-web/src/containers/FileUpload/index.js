@@ -51,7 +51,6 @@ const FileUpload = () => {
                 setFileError("");
             }
 
-            // Pass selectedFile here
             const response = await uploadFile(selectedFile, expiration, burnAfter);
             console.log("Upload successful:", response.data);
             navigate(`/download/${response.data}`);

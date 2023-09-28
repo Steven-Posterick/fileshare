@@ -21,7 +21,7 @@ const FileDownload = () => {
             }
         };
 
-        fetchFileDetails();
+        fetchFileDetails().then();
     }, [fileId]);
 
     const handleDownload = async () => {
@@ -44,8 +44,8 @@ const FileDownload = () => {
                 flexDirection="column"
                 alignItems="center"
                 padding="20px"
-                border="1px solid #e0e0e0"  // Gray border
-                borderRadius="8px"           // Rounded corners
+                border="1px solid #e0e0e0"
+                borderRadius="8px"
             >
                 <Typography variant="h5" gutterBottom>
                     Ready to Download

@@ -38,11 +38,7 @@ public class FileShareController {
             @RequestParam(name = "burnAfter", defaultValue = "") String burnAfter
     ){
         try {
-            var expirationType = Arrays
-                    .stream(ExpirationDate.values()).filter(x-> x.name().equals(expiration))
-                    .findFirst()
-                    .orElse(ExpirationDate.WEEK);
-
+            var expirationType = ExpirationDate.valueOf(expiration);
             var burnAfterInteger = numberService.tryParse(burnAfter);
 
             var fileId = fileService.uploadFile(file, expirationType, burnAfterInteger);
@@ -70,8 +66,7 @@ public class FileShareController {
         String fileName;
         try {
             var sharedFile = fileService.getSharedFile(new ObjectId(fileId));
-            if (sharedFile.isEmpty())
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            if (sharedFile.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 
             fileName = sharedFile.get().getFileName();
             resource = fileService.downloadFile(fileId);

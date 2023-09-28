@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { navigateToDownload, getFileDetails } from '../../services/fileShareService';
-import { Container, Typography, Button, Paper } from '@mui/material';
+import { Container, Typography, Button, CircularProgress, Box } from '@mui/material';
 
 const FileDownload = () => {
     const { fileId } = useParams();
@@ -29,26 +29,35 @@ const FileDownload = () => {
     };
 
     if (isLoading) {
-        return <Typography>Loading...</Typography>;
+        return (
+            <Container maxWidth="sm" style={{ textAlign: 'center', padding: '40px 0' }}>
+                <CircularProgress />
+                <Typography variant="h6" style={{ marginTop: '20px' }}>Loading File Details...</Typography>
+            </Container>
+        );
     }
 
     return (
         <Container maxWidth="sm">
-            <Paper elevation={3} style={{ padding: '20px', textAlign: 'center' }}>
-                <Typography variant="h4" gutterBottom>
-                    Download File
+            <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                padding="20px"
+                border="1px solid #e0e0e0"  // Gray border
+                borderRadius="8px"           // Rounded corners
+            >
+                <Typography variant="h5" gutterBottom>
+                    Ready to Download
                 </Typography>
                 <Typography variant="h6" color="textSecondary" gutterBottom>
-                    File ID: {fileId}
+                    {fileDetails.fileName}
                 </Typography>
-                <Typography variant="body1" gutterBottom>
-                    File Name: {fileDetails.fileName}
-                </Typography>
-                <Typography variant="body1" gutterBottom>
-                    Expiration Date: {fileDetails.expirationDate}
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                    Expiry: {fileDetails.expirationDate}
                 </Typography>
                 {fileDetails.readsLeft && (
-                    <Typography variant="body1" gutterBottom>
+                    <Typography variant="body2" color="textSecondary" gutterBottom>
                         Reads Left: {fileDetails.readsLeft}
                     </Typography>
                 )}
@@ -57,10 +66,11 @@ const FileDownload = () => {
                     color="primary"
                     onClick={handleDownload}
                     size="large"
+                    style={{ marginTop: '20px' }}
                 >
                     Download
                 </Button>
-            </Paper>
+            </Box>
         </Container>
     );
 }

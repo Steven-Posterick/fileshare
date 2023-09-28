@@ -36,7 +36,7 @@ const FileUpload = () => {
 
     const handleUpload = async () => {
         try {
-            if (burnAfterEnabled && (burnAfter === undefined || burnAfter <= 0)) {
+            if (burnAfterEnabled && burnAfter <= 0) {
                 setBurnAfterError("Must be greater than 0");
                 return;
             } else {
